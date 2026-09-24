@@ -1,0 +1,174 @@
+:root{
+  --progress:0;
+
+  --paper:#f4f6f8;
+  --paper-2:#eceff3;
+  --surface:#ffffff;
+  --surface-2:#f2f5f8;
+  --surface-3:#e3e9ef;
+  --ink:#0b1220;
+  --ink-2:#3d4859;
+  --ink-3:#5b6778;
+  --line:#e2e8ef;
+  --line-2:#cdd7e2;
+
+  --brand:#0d7a70;
+  --brand-600:#0a6259;
+  --brand-ink:#064e46;
+  --brand-soft:#e2f3f0;
+  --brand-glow:rgba(13,122,112,.22);
+
+  --accent:#1d5fa8;
+  --accent-soft:#e6eef8;
+
+  --amber:#9a5b09;
+  --amber-soft:#fbf0dc;
+  --red:#a8271f;
+  --red-soft:#fbe9e7;
+  --green:#1c6b39;
+  --green-soft:#e2f3e8;
+  --violet:#5b4a9e;
+  --violet-soft:#eeebf9;
+  --blue:#1d5b94;
+  --blue-soft:#e6eff8;
+
+  --must:#a8271f;
+  --good:#9a5b09;
+  --nice:#5b4a9e;
+
+  /* per-Part accents */
+  --pA:#0d7a70;
+  --pB:#a3620b;
+  --pC:#1d5fa8;
+  --pD:#a8271f;
+  --pE:#5b4a9e;
+  --pA-soft:#e2f3f0;
+  --pB-soft:#fbf0dc;
+  --pC-soft:#e6eef8;
+  --pD-soft:#fbe9e7;
+  --pE-soft:#eeebf9;
+
+  --r-xs:6px;
+  --radius:12px;
+  --r-sm:9px;
+  --radius-lg:16px;
+  --r-xl:22px;
+
+  --sh-1:0 1px 2px rgba(11,18,32,.05);
+  --shadow:0 1px 2px rgba(11,18,32,.04), 0 6px 18px -6px rgba(11,18,32,.10);
+  --sh-2:0 2px 4px rgba(11,18,32,.04), 0 14px 32px -10px rgba(11,18,32,.14);
+  --sh-3:0 6px 12px rgba(11,18,32,.05), 0 28px 56px -16px rgba(11,18,32,.20);
+
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --btn-ink:#ffffff;
+  --fs:16px;
+  --maxw:1240px;
+  --topbar-h:56px;
+}
+
+/* ---------- dark: system default (no explicit choice stamped) ---------- */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0a0d12;
+    --paper-2:#0e1218;
+    --surface:#141a22;
+    --surface-2:#1b222c;
+    --surface-3:#26303c;
+    --ink:#e9edf2;
+    --ink-2:#b3bdca;
+    --ink-3:#8492a3;
+    --line:#242d39;
+    --line-2:#36414f;
+
+    --brand:#4fd0c2;
+    --brand-600:#6bdccf;
+    --brand-ink:#a5e9e0;
+    --brand-soft:#0e2f2c;
+    --brand-glow:rgba(79,208,194,.20);
+
+    --accent:#79b3e8;
+    --accent-soft:#132639;
+
+    --amber:#e3ab5a;
+    --amber-soft:#33260f;
+    --red:#f08a80;
+    --red-soft:#3a1a17;
+    --green:#63c98a;
+    --green-soft:#12301e;
+    --violet:#b0a2ef;
+    --violet-soft:#221d3a;
+    --blue:#79b3e8;
+    --blue-soft:#152a3f;
+
+    --must:#f08a80;
+    --good:#e3ab5a;
+    --nice:#b0a2ef;
+
+    --pA:#4fd0c2;
+    --pB:#e3ab5a;
+    --pC:#79b3e8;
+    --pD:#f08a80;
+    --pE:#b0a2ef;
+    --pA-soft:#0e2f2c;
+    --pB-soft:#33260f;
+    --pC-soft:#152a3f;
+    --pD-soft:#3a1a17;
+    --pE-soft:#221d3a;
+
+    --btn-ink:#04211e;
+    --sh-1:0 1px 2px rgba(0,0,0,.5);
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 8px 22px -8px rgba(0,0,0,.55);
+    --sh-2:0 2px 6px rgba(0,0,0,.45), 0 18px 40px -12px rgba(0,0,0,.6);
+    --sh-3:0 8px 18px rgba(0,0,0,.5), 0 34px 64px -18px rgba(0,0,0,.7);
+  }
+}
+/* ---------- dark: explicit choice ---------- */
+:root[data-theme="dark"]{
+  --paper:#0a0d12;
+  --paper-2:#0e1218;
+  --surface:#141a22;
+  --surface-2:#1b222c;
+  --surface-3:#26303c;
+  --ink:#e9edf2;
+  --ink-2:#b3bdca;
+  --ink-3:#8492a3;
+  --line:#242d39;
+  --line-2:#36414f;
+  --brand:#4fd0c2;
+  --brand-600:#6bdccf;
+  --brand-ink:#a5e9e0;
+  --brand-soft:#0e2f2c;
+  --brand-glow:rgba(79,208,194,.20);
+  --accent:#79b3e8;
+  --accent-soft:#132639;
+  --amber:#e3ab5a;
+  --amber-soft:#33260f;
+  --red:#f08a80;
+  --red-soft:#3a1a17;
+  --green:#63c98a;
+  --green-soft:#12301e;
+  --violet:#b0a2ef;
+  --violet-soft:#221d3a;
+  --blue:#79b3e8;
+  --blue-soft:#152a3f;
+  --must:#f08a80;
+  --good:#e3ab5a;
+  --nice:#b0a2ef;
+  --pA:#4fd0c2;
+  --pB:#e3ab5a;
+  --pC:#79b3e8;
+  --pD:#f08a80;
+  --pE:#b0a2ef;
+  --pA-soft:#0e2f2c;
+  --pB-soft:#33260f;
+  --pC-soft:#152a3f;
+  --pD-soft:#3a1a17;
+  --pE-soft:#221d3a;
+  --btn-ink:#04211e;
+  --sh-1:0 1px 2px rgba(0,0,0,.5);
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 8px 22px -8px rgba(0,0,0,.55);
+  --sh-2:0 2px 6px rgba(0,0,0,.45), 0 18px 40px -12px rgba(0,0,0,.6);
+  --sh-3:0 8px 18px rgba(0,0,0,.5), 0 34px 64px -18px rgba(0,0,0,.7);
+}
