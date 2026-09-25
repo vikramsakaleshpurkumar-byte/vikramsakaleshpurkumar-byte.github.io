@@ -36,7 +36,7 @@ h3{font-size:1rem;margin:1em 0 .4em}
 .btn.sm{min-height:38px;font-size:.88rem}
 #summaryCard .btnrow>span{max-width:100%;min-width:0}
 #modSel,#q{max-width:100%;min-width:0}
-#lt{min-width:1180px}
+#lt{min-width:1300px}
 #lt td:nth-child(1){min-width:170px}
 #lt td:nth-child(3){min-width:210px}
 #lt td:nth-child(2){min-width:150px}
@@ -142,6 +142,12 @@ footer{border-top:1px solid var(--line);padding:20px 0 40px;color:var(--ink-2);f
     <div class="tw" role="region" aria-label="Units table" tabindex="0"><table id="ut"><thead></thead><tbody></tbody></table></div>
     <p class="note" style="margin-top:12px"><b>How to read this.</b> <i>Right first time</i> is the share of first-ever answers that were correct &mdash; what the class knew before the unit taught them. <i>Misses</i> counts every wrong checkpoint answer, including repeats. <i>Confident &amp; wrong</i> counts items a learner answered &ldquo;sure&rdquo; and got wrong and has not yet corrected &mdash; the misconceptions most worth a teaching session. <i>Exam misses</i> are wrong answers in the final assessment attributed to that unit. Units are sorted with the weakest first.</p>
   </section>
+  <section class="card hidden" id="megaCard" aria-labelledby="megaH">
+    <h2 id="megaH">4 · Megacodes</h2>
+    <p class="lede" id="megaLede" style="font-size:.95rem"></p>
+    <div class="tw" role="region" aria-label="Megacodes table" tabindex="0"><table id="mt"><thead></thead><tbody></tbody></table></div>
+    <p class="note" style="margin-top:12px"><b>How to read this.</b> Each learner's <i>best</i> run of each case counts: the share of right decisions, and whether that run still contained a critical error (for example a tenfold dose, or a shock with a pulse). A case where many learners' best runs still contain a critical error is the one to run on a manikin next.</p>
+  </section>
   <p class="note hidden" id="noDetail"></p>
 </main>
 
@@ -174,7 +180,11 @@ function detailBasis(r){
     d.units.map(function(u){ return [u.n, u.status, u.ok, u.firstSeen, u.firstRight, u.misses, u.hinted, u.cw, u.retained ? 1 : 0].join(":"); }).join(","),
     [d.calibration.sure.join("/"), d.calibration.fairly.join("/"), d.calibration.guessing.join("/")].join(","),
     d.exam.map(function(a){ return [a.at, a.pct, a.n, a.critMiss].join(":"); }).join(","),
-    d.studyDays].join("|");
+    d.studyDays].join("|") + megaBasis(d);
+}
+function megaBasis(d){
+  if (!d.megacodes || !d.megacodes.length) return "";
+  return "|mc:" + d.megacodes.map(function(m){ return [m.id, m.runs, m.best, m.crit, m.secs].join(":"); }).join(",");
 }
 function passportBasis(r){
   return [r.name, r.institution, r.reg, r.modules.map(function(m){ return [m.id,m.version,m.mastered,m.units,m.retainedUnits,m.examBest,m.certified].join(":"); }).join("|"), r.issued].join("~");
@@ -221,7 +231,8 @@ function ingest(text, src){
       ret:r.result.retentionUnits, retReq:r.result.retentionRequired,
       best:r.result.attempts ? r.result.bestScore : null, cut:r.result.cutScore, attempts:r.result.attempts || 0,
       certified:!!r.result.certified, code:r.verificationCode, integ:integ, dInteg:dInteg,
-      detail:(dInteg === "ok") ? r.detail : null, cw:cw, cal:cal
+      detail:(dInteg === "ok") ? r.detail : null, cw:cw, cal:cal,
+      mega:(dInteg === "ok" && r.detail.megacodes) ? r.detail.megacodes : null
     }, src);
   } else if (r && r.kind === "vikkypaedia-passport-record"){
     var ok = false; try { ok = fnv(passportBasis(r)) === r.checksum; } catch(e){}
@@ -235,7 +246,7 @@ function ingest(text, src){
         enrolledAt:null, issuedAt:issued, mastered:m.mastered, units:m.units,
         cps:parseInt(parts[0],10) || 0, cpsTotal:parseInt(parts[1],10) || 0,
         ret:m.retainedUnits, retReq:null, best:(m.examBest || m.examBest === 0) ? m.examBest : null, cut:m.cut, attempts:null,
-        certified:!!m.certified, code:"", integ:ok ? "ok" : "bad", dInteg:"none", detail:null, cw:null, cal:null
+        certified:!!m.certified, code:"", integ:ok ? "ok" : "bad", dInteg:"none", detail:null, cw:null, cal:null, mega:null
       }, src);
     });
     WARN.push(["warn", src + ": a Passport summary (" + (r.modules||[]).length + " module(s)) — no unit detail; ask for module completion records for the unit view."]);
@@ -276,7 +287,7 @@ var COLS = [
   { k:"name", t:"Learner" }, { k:"institution", t:"Institution" }, { k:"modTitle", t:"Module" },
   { k:"mastered", t:"Units", num:1 }, { k:"cps", t:"Checkpoints", num:1 }, { k:"ret", t:"Retention", num:1 },
   { k:"best", t:"Best exam", num:1 }, { k:"attempts", t:"Attempts", num:1 }, { k:"certified", t:"All 3 met" },
-  { k:"cw", t:"Confident & wrong", num:1 }, { k:"issuedAt", t:"Record date", num:1 }, { k:"integ", t:"Integrity" }
+  { k:"cw", t:"Confident & wrong", num:1 }, { k:"megaN", t:"Megacodes", num:1 }, { k:"issuedAt", t:"Record date", num:1 }, { k:"integ", t:"Integrity" }
 ];
 function cell(r, k){
   switch(k){
@@ -290,6 +301,11 @@ function cell(r, k){
     case "attempts": return r.attempts == null ? "—" : r.attempts;
     case "certified": return r.certified ? '<span class="pill ok">Yes</span>' : '<span class="pill">Not yet</span>';
     case "cw": return r.cw == null ? "—" : (r.cw ? '<span class="pill warn">' + r.cw + '</span>' : "0");
+    case "megaN":
+      if (!r.mega) return "\u2014";
+      if (!r.mega.length) return "0";
+      var mc = r.mega.reduce(function(a,m){ return a + (m.crit ? 1 : 0); }, 0);
+      return r.mega.length + '<span class="sub">median best ' + median(r.mega.map(function(m){ return m.best; })) + '%' + (mc ? ' \u00b7 ' + mc + ' with a critical error' : '') + '</span>';
     case "issuedAt": return day(r.issuedAt);
     case "integ":
       if (r.integ !== "ok") return '<span class="pill bad">Changed</span>';
@@ -298,7 +314,7 @@ function cell(r, k){
   }
   return "";
 }
-function sortVal(r, k){ var v = r[k]; if (v == null) return -Infinity; if (typeof v === "boolean") return v ? 1 : 0; return typeof v === "string" ? v.toLowerCase() : v; }
+function sortVal(r, k){ var v = k === "megaN" ? (r.mega ? r.mega.length : null) : r[k]; if (v == null) return -Infinity; if (typeof v === "boolean") return v ? 1 : 0; return typeof v === "string" ? v.toLowerCase() : v; }
 
 function renderLearners(rows){
   $("#lt thead").innerHTML = "<tr>" + COLS.map(function(c){
@@ -360,9 +376,9 @@ var UA = null;
 function renderUnits(rows){
   var m = $("#modSel").value;
   $("#noDetail").classList.add("hidden");
-  if (!m || m === "*"){ $("#unitCard").classList.add("hidden"); if (modules().length > 1){ $("#noDetail").textContent = "Choose one module above to see which units the class found hardest."; $("#noDetail").classList.remove("hidden"); } UA = null; return; }
+  if (!m || m === "*"){ $("#unitCard").classList.add("hidden"); $("#megaCard").classList.add("hidden"); if (modules().length > 1){ $("#noDetail").textContent = "Choose one module above to see which units the class found hardest."; $("#noDetail").classList.remove("hidden"); } UA = null; return; }
   UA = unitAgg(rows);
-  if (!UA){ $("#unitCard").classList.add("hidden"); $("#noDetail").textContent = "None of these records carries unit detail (they came from an earlier module version or from a Passport summary). Ask learners to download a fresh completion record from the module to see the unit view."; $("#noDetail").classList.remove("hidden"); return; }
+  if (!UA){ $("#unitCard").classList.add("hidden"); $("#megaCard").classList.add("hidden"); $("#noDetail").textContent = "None of these records carries unit detail (they came from an earlier module version or from a Passport summary). Ask learners to download a fresh completion record from the module to see the unit view."; $("#noDetail").classList.remove("hidden"); return; }
   var us = UA.units.map(function(u){ u.frp = pct(u.firstRight, u.firstSeen); u.mp = pct(u.mastered, u.learners); u.rp = pct(u.retained, u.learners); return u; });
   us.sort(function(a,b){
     var x = a.frp == null ? 101 : a.frp, y = b.frp == null ? 101 : b.frp;
@@ -379,13 +395,33 @@ function renderUnits(rows){
       '<td class="num">' + u.exMiss + "</td></tr>";
   }).join("");
   $("#unitCard").classList.remove("hidden");
+  renderMegaTable(rows);
+}
+var MA = null;
+function renderMegaTable(rows){
+  var withD = rows.filter(function(r){ return r.detail; }), C = {}, order = [];
+  withD.forEach(function(r){ (r.mega || []).forEach(function(m){
+    var x = C[m.id] || (C[m.id] = (order.push(m.id), { id:m.id, title:m.title, learners:0, bests:[], runs:[], crit:0 }));
+    x.learners++; x.bests.push(m.best); x.runs.push(m.runs); if (m.crit) x.crit++;
+  }); });
+  MA = order.map(function(id){ var x = C[id]; x.med = median(x.bests); x.medRuns = median(x.runs); return x; });
+  var card = $("#megaCard");
+  if (!MA.length){ card.classList.add("hidden"); return; }
+  MA.sort(function(a,b){ return (a.med - b.med) || (b.crit - a.crit); });
+  $("#megaLede").innerHTML = "Formative practice, not part of certification. <b>" + withD.filter(function(r){ return r.mega && r.mega.length; }).length + "</b> of " + withD.length + " learner(s) with unit detail have practised at least one megacode. Lowest median first.";
+  $("#mt thead").innerHTML = '<tr><th>Case</th><th class="num">Learners</th><th>Median best</th><th class="num">Best run had a critical error</th><th class="num">Median runs</th></tr>';
+  $("#mt tbody").innerHTML = MA.map(function(x){
+    return "<tr><td>" + esc(x.title) + "</td><td class=\"num\">" + x.learners + " of " + withD.length + "</td><td>" + bar(x.med) + "</td>" +
+      '<td class="num">' + (x.crit ? '<span class="pill warn">' + x.crit + '</span>' : "0") + "</td><td class=\"num\">" + x.medRuns + "</td></tr>";
+  }).join("");
+  card.classList.remove("hidden");
 }
 
 function render(){
   $("#warns").innerHTML = WARN.slice(-12).map(function(w){ return '<li class="w-' + w[0] + '">' + esc(w[1]) + "</li>"; }).join("") + (WARN.length > 12 ? "<li>… and " + (WARN.length - 12) + " earlier message(s).</li>" : "");
   var has = ROWS.length > 0;
   $("#summaryCard").classList.toggle("hidden", !has);
-  if (!has){ $("#unitCard").classList.add("hidden"); $("#noDetail").classList.add("hidden"); return; }
+  if (!has){ $("#unitCard").classList.add("hidden"); $("#megaCard").classList.add("hidden"); $("#noDetail").classList.add("hidden"); return; }
   var ms = modules(), cur = $("#modSel").value;
   $("#modSel").innerHTML = (ms.length > 1 ? '<option value="*">All modules</option>' : "") + ms.map(function(m){ return '<option value="' + esc(m.id) + '">' + esc(m.title) + "</option>"; }).join("");
   if (cur && Array.prototype.some.call($("#modSel").options, function(o){ return o.value === cur; })) $("#modSel").value = cur;
@@ -405,8 +441,8 @@ function save(name, text){
 }
 function stamp(){ var d = new Date(); return d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0"+d.getDate()).slice(-2); }
 $("#csvL").addEventListener("click", function(){
-  var head = ["Name","Registration","Institution","Email","Track","Setting","Module","Version","Source","Units mastered","Units total","Checkpoints correct","Checkpoints total","Units retained","Retention needed","Best exam %","Cut %","Attempts","All three criteria met","Confident and wrong","Enrolled","Record date","Verification code","Checksum","Unit detail"];
-  var body = filtered().map(function(r){ return [r.name, r.reg, r.institution, r.email, r.track, r.setting, r.modTitle, r.version, r.kind === "passport" ? "Passport summary" : "Completion record", r.mastered, r.units, r.cps, r.cpsTotal, r.ret, r.retReq, r.best, r.cut, r.attempts, r.certified ? "Yes" : "No", r.cw, r.enrolledAt ? new Date(r.enrolledAt).toISOString().slice(0,10) : "", r.issuedAt ? new Date(r.issuedAt).toISOString().slice(0,10) : "", r.code, r.integ === "ok" ? "matches" : "CHANGED", r.dInteg === "ok" ? "yes" : (r.dInteg === "bad" ? "CHANGED" : "no")]; });
+  var head = ["Name","Registration","Institution","Email","Track","Setting","Module","Version","Source","Units mastered","Units total","Checkpoints correct","Checkpoints total","Units retained","Retention needed","Best exam %","Cut %","Attempts","All three criteria met","Confident and wrong","Megacodes practised","Megacode median best %","Megacodes with a critical error in the best run","Enrolled","Record date","Verification code","Checksum","Unit detail"];
+  var body = filtered().map(function(r){ return [r.name, r.reg, r.institution, r.email, r.track, r.setting, r.modTitle, r.version, r.kind === "passport" ? "Passport summary" : "Completion record", r.mastered, r.units, r.cps, r.cpsTotal, r.ret, r.retReq, r.best, r.cut, r.attempts, r.certified ? "Yes" : "No", r.cw, r.mega ? r.mega.length : "", r.mega && r.mega.length ? median(r.mega.map(function(m){ return m.best; })) : "", r.mega ? r.mega.filter(function(m){ return m.crit; }).length : "", r.enrolledAt ? new Date(r.enrolledAt).toISOString().slice(0,10) : "", r.issuedAt ? new Date(r.issuedAt).toISOString().slice(0,10) : "", r.code, r.integ === "ok" ? "matches" : "CHANGED", r.dInteg === "ok" ? "yes" : (r.dInteg === "bad" ? "CHANGED" : "no")]; });
   save("vikkypaedia-class-learners-" + stamp() + ".csv", csv([head].concat(body)));
 });
 $("#csvU").addEventListener("click", function(){
@@ -456,7 +492,12 @@ $("#sample").addEventListener("click", function(){
       signatory:{ name:"", role:"" }, verificationCode:"SAMPLE-" + i, attestation:"Fictional sample for trying the class report.", scope:"" };
     r.result.certified = cps === 40 && ret >= 15 && best >= 80;
     r.checksum = fnv(basis(r));
-    r.detail = { units:units, calibration:{ sure:sure, fairly:[3,2], guessing:[1,2] }, exam: sat ? [{ at:t0 + 19*86400000, pct:best, n:50, timedOut:false, critMiss:0, miss:miss }] : [], studyDays:6 + Math.floor(rnd()*10) };
+    var MCS = [["p-brady","The bradycardic infant",0.9],["p-svt","Unstable SVT",0.8],["p-sepsis","Septic shock without a PICU",0.75],["p-pea","PEA after diarrhoea",0.7],["p-vf","Collapse in the corridor: VF",0.6],["p-trauma","Arrest after trauma",0.8]];
+    var mega = MCS.filter(function(){ return rnd() < 0.3 + ability*0.6; }).map(function(m){
+      var best = Math.min(100, Math.round((m[2] * ability + 0.25 + rnd()*0.15) * 100 / 5) * 5);
+      return { id:m[0], title:m[1], runs:1 + Math.floor(rnd()*3), best:best, crit:(rnd() > m[2] ? 1 : 0), secs:300 + Math.floor(rnd()*400) };
+    });
+    r.detail = { units:units, calibration:{ sure:sure, fairly:[3,2], guessing:[1,2] }, exam: sat ? [{ at:t0 + 19*86400000, pct:best, n:50, timedOut:false, critMiss:0, miss:miss }] : [], studyDays:6 + Math.floor(rnd()*10), megacodes:mega };
     r.detailChecksum = fnv(detailBasis(r));
     ingest(JSON.stringify(r), "sample-" + (i+1) + ".json");
   });

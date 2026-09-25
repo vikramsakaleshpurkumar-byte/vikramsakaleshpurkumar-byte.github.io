@@ -15,6 +15,7 @@ Every module on the Vikkypaedia Standard engine writes a short summary (units ma
 `class-report.html` (linked from the hub) reads a batch of learners' completion records (`.json`, dropped as files or a folder) and shows:
 - per learner: units, checkpoints, retention, best exam, attempts, all three criteria met, confident-and-wrong count, integrity flag;
 - per unit (records from engine v2.1 onward, which carry `detail` + `detailChecksum`): right-first-time %, mastered %, retained %, misses, hints, confident-and-wrong, exam misses — weakest first;
+- a Megacodes table (records from engine v2.2 onward, PALS and NRP): learners who practised each case, median best score, and how many best runs still contained a critical error;
 - CSV export of both tables, print, and a fictional sample batch to try it.
 
 Everything runs in the faculty member's browser; nothing is uploaded. Checksums detect casual alteration only — records are self-attested. Test: `python tests/test_report.py` (needs a built PALS module at `../pals/index.html`).

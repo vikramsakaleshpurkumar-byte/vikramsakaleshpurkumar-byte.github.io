@@ -136,6 +136,27 @@ with sync_playwright() as pw, tempfile.TemporaryDirectory() as tmp:
     up = os.path.join(tmp, "u.csv"); du.value.save_as(up); ucsv = open(up, encoding="utf-8-sig").read().splitlines()
     check("units CSV: header + 20 rows", len(ucsv) == 21, len(ucsv))
 
+    print("\n== MEGACODES ==")
+    NRPREC = os.environ.get("VKP_MEGA_RECORD")
+    mrec = json.load(open(NRPREC)) if NRPREC and os.path.exists(NRPREC) else None
+    if mrec and (mrec.get("detail") or {}).get("megacodes"):
+        bad = json.loads(json.dumps(mrec)); bad["detail"]["megacodes"][0]["best"] = 100 if bad["detail"]["megacodes"][0]["best"] != 100 else 50
+        bad["learner"] = dict(mrec["learner"]); mp = os.path.join(tmp, "mega.json"); bp = os.path.join(tmp, "megabad.json")
+        json.dump(mrec, open(mp, "w")); json.dump(bad, open(bp, "w"))
+        r.click("#clear"); r.wait_for_timeout(150)
+        r.set_input_files("#files", [mp]); r.wait_for_timeout(400)
+        row = r.evaluate("()=>__VKP_REPORT__.rows()[0]")
+        check("megacode record: detail checksum verifies", row["dInteg"] == "ok", row["dInteg"])
+        check("megacode record: %d cases carried" % len(mrec["detail"]["megacodes"]), row["mega"] and len(row["mega"]) == len(mrec["detail"]["megacodes"]))
+        check("megacode card shown with one row per case", r.evaluate("()=>!document.getElementById('megaCard').classList.contains('hidden') && document.querySelectorAll('#mt tbody tr').length") == len(mrec["detail"]["megacodes"]))
+        r.set_input_files("#files", [bp]); r.wait_for_timeout(400)
+        row = r.evaluate("()=>__VKP_REPORT__.rows()[0]")
+        check("tampered megacode score rejects the detail", row["dInteg"] == "bad", row["dInteg"])
+    else:
+        print("  (skipped: set VKP_MEGA_RECORD to a completion record that contains megacode runs)")
+    r.click("#clear"); r.wait_for_timeout(150); r.click("#sample"); r.wait_for_timeout(400)
+    check("sample batch shows the megacode table", r.evaluate("()=>document.querySelectorAll('#mt tbody tr').length") == 6)
+
     print("\n== MULTI-MODULE FILTER ==")
     r.evaluate("""()=>{const x=JSON.parse(JSON.stringify(%s)); __VKP_REPORT__.ingest(JSON.stringify(x),'real.json'); __VKP_REPORT__.render();}""" % json.dumps(rec))
     opts = r.evaluate("()=>[...document.querySelectorAll('#modSel option')].map(o=>o.value)")
